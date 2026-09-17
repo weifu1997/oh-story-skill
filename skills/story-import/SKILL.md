@@ -42,7 +42,7 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 当用户问"导入续写先走 story-setup 还是 story-import"、"已有小说怎么续写"、"导入流程"这类流程问题时，先直接给出结论，再继续收集原文：
 
 1. **推荐顺序**：先 `/story-setup`（部署 hooks/agents/AGENTS），新开/刷新会话后运行 `/story-import`，最后用 `/story-long-write 日更/写第N章` 续写。
-2. **也可以直接 `/story-import`**：本 skill 会在进入深度分析前检测 `.story-deployed` 与专业 agent；未部署时会给出"先去 setup"或"继续导入（串行降级）"两种选择。
+2. **也可以直接 `/story-import`**：本 skill 会在进入深度分析前检测 `.story-deployed` 与专业 agent；未部署时会给出"先去 setup"或"继续导入（主线程逐章）"两种选择。
 3. **已导入过的当前协议项目**（书名目录下有 `追踪/_tracking-state.json` 或已选定的 `追踪/story-state.sqlite3`）：不要重复跑完整导入；确认 `.active-book` 后用 `/story-long-write` 续写。二者不得并存。
 4. **v0.7.2 及更早的旧追踪项目**（有 `追踪/` 和正文，但没有 `追踪/_tracking-state.json`）：日更会停下要求重新导入，但**不需要重跑全书拆解**。只重建追踪即可，见下方「旧追踪项目迁移」。
 
@@ -101,20 +101,20 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 在进入 Phase 2 之前，先检测项目是否已部署 story-setup 基础设施：
 
-- 先读取 `.story-deployed` 并执行顶部 Spawn 版本门禁：版本不符只报 `Notice`，**不阻断**并行检查。
+- 先读取 `.story-deployed` 并执行顶部 Spawn 版本门禁：版本不符只报 `Notice`，**不阻断**后续 agent 文件检查。
 - 然后按文件存在性检查当前运行时 canonical 目录里的 Phase 2 `chapter-extractor`：Claude/OpenCode/Antigravity 为同名 Markdown，Codex 为同名 TOML。文件在即可尝试 spawn；真正降级 solo/direct 的信号仍是 agent 文件缺失或运行时不暴露 custom agent。
 - 如果 `.story-deployed` 的 `target_cli` 包含 `zcode`，项目 agents 缺失是 ZCode 3.3.4 的预期状态：不要提示重复部署，直接以串行 solo/direct 进入分析并报告 fallback。
 
 **部署标记缺失，或当前端的 agent 不可用，且不是已部署 ZCode 项目时**，提示用户：
 
-> 「检测到当前项目尚未部署写作基础设施，或当前端找不到 chapter-extractor。建议先运行 `/story-setup` 再回来导入，否则深度分析阶段无法使用并行 chapter-extractor agent。」
+> 「检测到当前项目尚未部署写作基础设施，或当前端找不到 chapter-extractor。建议先运行 `/story-setup` 再回来导入，否则深度分析阶段无法使用 chapter-extractor agent，只能由主线程逐章处理。」
 
 给用户两个选择：
 
 1. **先去 setup**：暂停导入，运行 `/story-setup`，部署完成后重新触发 `/story-import`；
-2. **继续导入**：接受 Phase 2 降级为串行处理（长篇逐章摘要不并行，速度较慢，但产物完整）。
+2. **继续导入**：接受 Phase 2 降级为主线程逐章处理（长篇逐章摘要不再 spawn chapter-extractor，速度较慢，但产物完整）。
 
-用户选择记入上下文，Phase 2 据此决定是否走并行模式。
+用户选择记入上下文，Phase 2 据此决定是否 spawn chapter-extractor。
 
 ### Step 6：原文备份
 
@@ -143,7 +143,7 @@ story-long-analyze 在 Stage 0+1（黄金三章）后会**自动停靠**并用 A
 
 - 措辞示例：启动深度分析时声明「以『完整拆解、一次跑完、不要停下询问』模式拆解本书，确保 Stage 2-6 全部产出」。
 - **兜底**：若运行环境实际仍停在 Stage 1 询问处，story-import 自动选择「继续全量拆解」，**绝不把停靠询问甩给用户**。
-- 环境检测（Phase 1）发现未部署 chapter-extractor agent 且用户选择「继续导入」时，Stage 2 逐章摘要降级为串行处理，产物仍完整，仅速度变慢。
+- 环境检测（Phase 1）发现未部署 chapter-extractor agent 且用户选择「继续导入」时，Stage 2 逐章摘要改由主线程处理，产物仍完整，仅速度变慢。已部署时 Stage 2 也按章串行 spawn，同一时刻只跑 1 个 Agent。
 
 #### 短篇：单一全量管道
 

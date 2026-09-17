@@ -117,9 +117,11 @@
 **退化防护**：正文落盘后运行 `node scripts/check-degeneration.js --check 正文/第XXX章_*.md`。blocking（复读、截断、拒绝语、tier1 工程词泄漏）只重写受影响章节，最多 2 次；仍失败就报告证据让用户定夺。
 advisory 只提示可疑处，先看脚本给出的例外；故事内系统/界面用语、弹幕刷屏、重复台词等有功能则保留。
 
-### Agent 调用：consistency-checker
+### Agent 调用：consistency-checker → narrative-writer
 
-质量检查阶段，consistency-checker 已部署时，仅按当前运行时的 canonical agent 目录检查并 spawn，获取 S1-S4 报告。Prompt：`项目目录：{dir}\n检查范围：{本次写作的章节}\n检查类型：事实冲突+伏笔断线+角色属性不一致\n本章新增申报：{writer 交回的申报表原样粘贴，无则写 0}；同时核对正文是否有未申报的跨章事实，尤其新增证词、证据、承诺与关系变化，逐处列出原文和细纲出处。对各新增项跑一遍你现有的实体/设定/时间线/规则边界/跨章因果/代价一致性扫描，冲突按 S1-S4 报出`。不可用则主线程参照 long-chapter-quality.md 直接检查。
+质量检查阶段如需 spawn 多个 reviewer，**同一时刻只允许 1 个 Agent 在跑**：先跑完 `consistency-checker`，完整返回后再 spawn `narrative-writer`；禁止一次发出两个 Agent 工具调用。
+
+consistency-checker 已部署时，仅按当前运行时的 canonical agent 目录检查并 spawn，获取 S1-S4 报告。Prompt：`项目目录：{dir}\n检查范围：{本次写作的章节}\n检查类型：事实冲突+伏笔断线+角色属性不一致\n本章新增申报：{writer 交回的申报表原样粘贴，无则写 0}；同时核对正文是否有未申报的跨章事实，尤其新增证词、证据、承诺与关系变化，逐处列出原文和细纲出处。对各新增项跑一遍你现有的实体/设定/时间线/规则边界/跨章因果/代价一致性扫描，冲突按 S1-S4 报出`。不可用则主线程参照 long-chapter-quality.md 直接检查。
 
 **新增申报三档处置**（在本节做：正文已定稿、tracking 未提交）。checker 只给事实层证据，**分档判定归主会话**——「能不能收编」「会不会偏离后续」是创作判断，checker 明文不做也判不了。逐条按下表处置：
 

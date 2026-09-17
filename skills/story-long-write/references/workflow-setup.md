@@ -103,9 +103,9 @@ story-architect 属于高层级结构设计 agent。轻量题材定位优先由�
 
 > **多对标书时**：参 `references/cross-book-recall.md`，副对标 anchor 入「对标分析」表附录
 
-#### Agent 调用：story-architect + character-designer
+#### Agent 调用：story-architect → character-designer
 
-核心设定阶段，当前端已部署对应 agent 时可 spawn；Antigravity 按 SKILL.md 用 `invoke_subagent` + 同名 `TypeName`：
+核心设定阶段，当前端已部署对应 agent 时可 spawn；Antigravity 按 SKILL.md 用 `invoke_subagent` + 同名 `TypeName`。**同一时刻只允许 1 个 Agent 在跑**：先跑完 `story-architect`，完整返回后再 spawn `character-designer`；禁止一次发出两个 Agent 工具调用。
 - `Agent(subagent_type: "story-architect", prompt: "项目目录：{dir}\n任务类型：核心设定\n查询参数：世界观构建+核心冲突设计")` — 辅助世界观和核心冲突设计；spawn prompt 必须原样附带 Phase 1 的「story-architect 契约摘要」（升级台阶检查约束力量体系设计）
 - `Agent(subagent_type: "character-designer", prompt: "项目目录：{dir}\n任务类型：角色设定\n查询参数：{主角设定信息}")` — 辅助角色设定和语言风格档案
 

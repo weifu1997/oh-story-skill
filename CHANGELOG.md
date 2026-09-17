@@ -12,6 +12,10 @@ compare 链接；小节名使用 Keep a Changelog 的六个英文类别（`Added
 
 ## [Unreleased]
 
+### Changed
+
+- 审查、拆文、导入、开书设定与写后质检一律禁止并行 spawn：同一时刻只跑 1 个 Agent。`story-review` full/lean 按固定顺序串行（版本号 1.1.1 → 1.1.2）。`story-long-analyze` Stage 2 按章串行 spawn `chapter-extractor`，超长篇 Stage 3-5 按批串行 spawn，Stage 3 与 4a 改为先后执行。长篇核心设定、写后质检与短篇精修如需两个 Agent，也必须等前一个完整返回再开下一个。
+
 ### Fixed
 
 - `story-import` 并行拆文不再要求 `agents_version: 28`：版本不符只提示，文件存在即可 spawn。

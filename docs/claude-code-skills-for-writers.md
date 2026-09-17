@@ -20,7 +20,7 @@ The 13 skills in Oh Story, grouped by writing task:
 | Deconstruct | `story-long-analyze`, `story-short-analyze` | Six-stage pipeline: golden first three chapters, per-chapter summaries, rhythm and emotion-module indexes, settings, style profile |
 | Draft | `story-long-write`, `story-short-write` | Outline to prose with a file-first tracking state (`_tracking-state.json`, per-chapter deltas ≤3072 bytes) |
 | Revise | `story-deslop` | Writing lint for AI-flavored prose: deterministic pattern check, 7 gates, capped deletion ratios |
-| Review | `story-review` | Multi-perspective review with parallel reviewer agents, falls back to single-thread |
+| Review | `story-review` | Multi-perspective review with sequential reviewer agents, falls back to single-thread |
 | Import | `story-import` | Reverse-parse an existing manuscript into the project structure |
 | Cover | `story-cover` | Cover generation from title and genre |
 | Browser | `browser-cdp` | Reuse a logged-in Chrome session to fetch chart data |

@@ -1,7 +1,7 @@
 ---
 name: story-review
-version: 1.1.1
-description: "多视角对抗式审查。full/lean 模式在已部署 reviewer agents 时并行 spawn；缺失/异常 agents 或 spawn 失败时自动降级 solo，参考文件不可读时使用内置 rubric fallback。触发方式：/story-review、/审查、「审查一下」「帮我审一下」。"
+version: 1.1.2
+description: "多视角对抗式审查。full/lean 模式在已部署 reviewer agents 时按固定顺序串行 spawn，同一时刻只跑 1 个 Agent；缺失/异常 agents 或 spawn 失败时自动降级 solo，参考文件不可读时使用内置 rubric fallback。触发方式：/story-review、/审查、「审查一下」「帮我审一下」。"
 metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudecode"}}
 ---
 # story-review：多视角对抗式审查
@@ -24,8 +24,8 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 ## Review Mode 选择
 
-- `/story-review` 或 `/story-review full` → 优先 spawn 全部 4 个 Agent；如果当前已经在子代理内，核心 Agent 未部署/异常，或 spawn 失败，自动降级为 solo。
-- `/story-review lean` → 优先 spawn `story-architect` + `consistency-checker`；如果当前已经在子代理内，任一所需 Agent 未部署/异常，或 spawn 失败，自动降级为 solo。
+- `/story-review` 或 `/story-review full` → 优先按固定顺序串行 spawn 全部 4 个 Agent；如果当前已经在子代理内，核心 Agent 未部署/异常，或 spawn 失败，自动降级为 solo。
+- `/story-review lean` → 优先按固定顺序串行 spawn `story-architect` 再 `consistency-checker`；如果当前已经在子代理内，任一所需 Agent 未部署/异常，或 spawn 失败，自动降级为 solo。
 - `/story-review solo` → 不 spawn Agent，由当前会话执行基础审查。
 - 未指定 → 默认 full，并在报告里写明最终实际执行模式。
 
@@ -218,11 +218,18 @@ full/lean 模式下，主会话必须把“审查基准包摘要”直接写进�
 
 ---
 
-## Phase 2：并行 Spawn Agent（full/lean 模式）
+## Phase 2：串行 Spawn Agent（full/lean 模式）
 
-使用当前运行时的 Agent 工具并行调用（Codex 原生子代理使用 `agent_type`，Claude Code 兼容面使用 `subagent_type`，Antigravity 使用 `invoke_subagent` + 同名 `TypeName`；实际字段以当前 CLI 暴露的工具为准）。每个 Agent 不继承父对话上下文，prompt 必须自包含项目路径、审查范围、文件路径、必要摘录、审查基准包摘要、Rubric Source 和统一 Findings Schema。
+使用当前运行时的 Agent 工具**按固定顺序逐个调用**（Codex 原生子代理使用 `agent_type`，Claude Code 兼容面使用 `subagent_type`，Antigravity 使用 `invoke_subagent` + 同名 `TypeName`；实际字段以当前 CLI 暴露的工具为准）。每个 Agent 不继承父对话上下文，prompt 必须自包含项目路径、审查范围、文件路径、必要摘录、审查基准包摘要、Rubric Source 和统一 Findings Schema。
 
-**调用规则**：执行 Phase 0 后，只有实际模式仍是 full/lean 时才 spawn。不要 spawn 缺失 Agent。
+**串行铁律（必须遵守）**：
+- 同一时刻只允许 1 个 reviewer Agent 在跑。禁止一次发出多个 Agent 工具调用，禁止把 4 个（或 lean 的 2 个）Agent 并行拉起。
+- 必须等当前 Agent 完整返回后，再 spawn 下一个。不得预启动、后台排队同时跑。
+- full 固定顺序：`story-architect` → `character-designer` → `narrative-writer` → `consistency-checker`。
+- lean 固定顺序：`story-architect` → `consistency-checker`。
+- 可选的 `story-explorer` 预查询必须在本 Phase 开始前结束；Phase 3 的 `story-researcher` 必须等全部 reviewer 结束后才可 spawn。都不得与 reviewer 重叠。
+
+**调用规则**：执行 Phase 0 后，只有实际模式仍是 full/lean 时才 spawn。不要 spawn 缺失 Agent。任一必需 Agent spawn 失败时，按 Phase 0 第 6 步停止后续 spawn，改用 `solo` 重新审查。
 
 **Agent 1: story-architect**（subagent_type: story-architect）
 - full/lean 均调用。

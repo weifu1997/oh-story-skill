@@ -44,7 +44,7 @@ From `story-long-write`'s single-chapter flow:
 2. **Load only what would otherwise be wrong.** For each character on stage, read `设定/角色/{name}.md` (stable characterization) and `追踪/角色状态/{name}.md` (current location, goal, relationships, what they know, open threads). "Xu Tang has an older brother" is characterization. "Xu Tang does not know the letter came from him" is state. Reading them separately is what stops the model from turning a fact into character knowledge.
 3. **Write the prose.**
 4. **Commit the delta.** `tracking_commit.py` records who learned what, which setup paid off, how far time moved. Derived files refresh.
-5. **Review.** `story-review` can spawn parallel reviewer agents, including a consistency checker, against the settings and tracking files. If the agents are not deployed it degrades to a single-thread review instead of skipping.
+5. **Review.** `story-review` spawns reviewer agents one at a time, including a consistency checker, against the settings and tracking files. If the agents are not deployed it degrades to a single-thread review instead of skipping.
 
 This is why a three-chapter batch keeps working: each chapter starts from a fresh state card, not from an ever-growing chat transcript.
 

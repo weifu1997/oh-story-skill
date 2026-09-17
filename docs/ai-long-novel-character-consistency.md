@@ -44,7 +44,7 @@ English version: [Keep an AI-written novel consistent over 100+ chapters](keep-a
 2. **只加载必需信息。** 写这章需要出场的角色，读 `设定/角色/{名}.md`（稳定人设）和 `追踪/角色状态/{名}.md`（当前位置、目标、关系、已知信息、未了线索）。"徐棠有个哥哥"是设定；"徐棠不知道这封信是哥哥寄的"是状态。两者分开读，模型就不会把设定当成角色知道的事。
 3. **写正文。**
 4. **写回追踪。** 通过 `tracking_commit.py` 提交本章变化：谁知道了什么、哪条伏笔被兑现、时间推进到哪。派生文件自动刷新。
-5. **审查。** `story-review` 可以并行 spawn 多个 reviewer agent（含 consistency-checker）对照设定和追踪找矛盾；缺 agent 时自动降级为单线程审查。
+5. **审查。** `story-review` 按固定顺序串行 spawn reviewer agent（含 consistency-checker）对照设定和追踪找矛盾，同一时刻只跑 1 个；缺 agent 时自动降级为单线程审查。
 
 这就是为什么"日更 3 章"能连续跑：每章拿到的都是当前状态卡，而不是越滚越长的聊天记录。
 
