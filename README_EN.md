@@ -1,4 +1,4 @@
-<!-- Last synced with README.md: 2026-09-16 -->
+<!-- Last synced with README.md: 2026-09-17 -->
 
 
 <p align="center">
@@ -22,15 +22,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zenstory-ai/oh-story-claudecode/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/zenstory-ai/oh-story-claudecode?style=flat-square&color=22D3EE&logo=github&logoColor=white&label=Stars"></a>
-  <a href="https://github.com/zenstory-ai/oh-story-claudecode/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/zenstory-ai/oh-story-claudecode?style=flat-square&color=081431&label=Release"></a>
+  <a href="https://github.com/weifu1997/oh-story-skill/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/weifu1997/oh-story-skill?style=flat-square&color=22D3EE&logo=github&logoColor=white&label=Stars"></a>
+  <a href="https://github.com/weifu1997/oh-story-skill/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/weifu1997/oh-story-skill?style=flat-square&color=081431&label=Release"></a>
   <img alt="Skills 13" src="https://img.shields.io/badge/Skills-13-081431?style=flat-square">
   <a href="./LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-1F6FEB?style=flat-square"></a>
 </p>
 
 <p align="center">
   <a href="https://t.me/ohstoryclaudecode"><img alt="Telegram 交流群" src="https://img.shields.io/badge/Telegram%20%E4%BA%A4%E6%B5%81%E7%BE%A4-26A5E4?style=for-the-badge&logo=telegram&logoColor=white"></a>
-  <a href="https://github.com/zenstory-ai/oh-story-claudecode/discussions"><img alt="GitHub Discussions" src="https://img.shields.io/badge/GitHub%20Discussions-181717?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://github.com/weifu1997/oh-story-skill/discussions"><img alt="GitHub Discussions" src="https://img.shields.io/badge/GitHub%20Discussions-181717?style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
 ![OH STORY local writing desk](demo/story-dashboard.png)
@@ -53,12 +53,12 @@ Professional authors follow a three-step method:
 
 Built around four pillars: reverse-engineering hits · plot modularization · layered state management · human-AI collaboration.
 
-> Latest release: **v0.7.10** (2026-09-09). See [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/zenstory-ai/oh-story-claudecode/releases); rerun `/story-setup` and start a new session after upgrading. Antigravity deployment is covered in the usage notes below.
+> Latest release: **v0.7.10** (2026-09-09). See [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/weifu1997/oh-story-skill/releases); rerun `/story-setup` and start a new session after upgrading. Antigravity deployment is covered in the usage notes below.
 
 ## Installation
 
 ```bash
-npx skills add zenstory-ai/oh-story-claudecode -y -g
+npx skills add weifu1997/oh-story-skill -y -g
 ```
 
 `-g` installs globally (available in every directory); drop `-g` to install only into the current directory. Re-run the same command to update.
@@ -66,7 +66,7 @@ npx skills add zenstory-ai/oh-story-claudecode -y -g
 You can also tell Claude Code / Antigravity / OpenCode / ZCode / OpenClaw / Codex / Reasonix, or another Web AI / agent platform that can import a GitHub repo or skill:
 
 ```
-Install this skill https://github.com/zenstory-ai/oh-story-claudecode
+Install this skill https://github.com/weifu1997/oh-story-skill
 ```
 
 To upgrade, repeat the same instruction.
@@ -90,7 +90,7 @@ This standalone `npx skills` installation path does not use the Claude Code or Z
 **Claude Code users:** The marketplace remains named `oh-story-skills`, but now contains one `oh-story` bundle. Claude Code discovers all 13 root Skills from that bundle:
 
 ```bash
-claude plugin marketplace add https://github.com/zenstory-ai/oh-story-claudecode
+claude plugin marketplace add https://github.com/weifu1997/oh-story-skill
 claude plugin install oh-story@oh-story-skills
 ```
 
@@ -116,7 +116,7 @@ After `$story-setup` deploys into a writing project, it creates `.codex/agents/*
 
 </details>
 
-After updating, if a project has already run `/story-setup`, re-run `/story-setup` from the project root to sync hooks / agents / references. Per-version changes are in [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/zenstory-ai/oh-story-claudecode/releases).
+After updating, if a project has already run `/story-setup`, re-run `/story-setup` from the project root to sync hooks / agents / references. Per-version changes are in [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/weifu1997/oh-story-skill/releases).
 
 **Multi-agent collaboration needs setup + a fresh session:** the 7 specialist agents (story-architect, narrative-writer, consistency-checker, etc.) are written into `.claude/agents/` by `/story-setup`, `.codex/agents/*.toml` by `$story-setup`, or generated into `.agents/agents/agent-name/agent.md` (`agent-name` stands for the actual name) by Antigravity `story-setup`. Antigravity calls them with `invoke_subagent` and the matching `TypeName`; if custom subagents are unavailable, each skill reports a solo/direct fallback. Run `/story-review` in the fresh session — `Effective Mode: full/lean` means agents registered, while `Fallback: ... -> solo` means they are unavailable.
 
@@ -516,8 +516,8 @@ Contributions are welcome — new skills, knowledge base additions, market data 
 ## Community
 
 - **Telegram**: <https://t.me/ohstoryclaudecode> — chat, troubleshooting, and feature discussion.
-- **GitHub Discussions**: [ask questions, get help, share workflows](https://github.com/zenstory-ai/oh-story-claudecode/discussions).
-- **GitHub Issues**: [bugs, output-quality cases, and feature requests](https://github.com/zenstory-ai/oh-story-claudecode/issues/new/choose). Use the structured forms and include reproducible evidence or a concrete output sample.
+- **GitHub Discussions**: [ask questions, get help, share workflows](https://github.com/weifu1997/oh-story-skill/discussions).
+- **GitHub Issues**: [bugs, output-quality cases, and feature requests](https://github.com/weifu1997/oh-story-skill/issues/new/choose). Use the structured forms and include reproducible evidence or a concrete output sample.
 
 ## Acknowledgments
 
@@ -531,11 +531,12 @@ Oh Story is part of [ZenStory AI](https://zenstory.ai) — open-source, agent-na
 
 | Project | What it does |
 | --- | --- |
-| [oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode) | Web-fiction writing skill pack (this repo) |
+| [oh-story-skill](https://github.com/weifu1997/oh-story-skill) | Web-fiction writing skill pack (this repo; independent install source) |
+| [oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode) | Upstream official repository |
 | [drama-skills](https://github.com/zenstory-ai/drama-skills) | AI short-drama / motion-comic suite: scripts, assets, storyboards, image & video prompts, independent review |
 | [novel-to-game](https://github.com/zenstory-ai/novel-to-game) | Agent skills for source-grounded novel adaptation, target-runtime builds, and evidence-based QA |
 | [video-recap-skills](https://github.com/zenstory-ai/video-recap-skills) | Create Chinese-narration recaps from supported video files, with optional editable JianYing/CapCut draft export |
 | [oh-story-dsh](https://github.com/zenstory-ai/oh-story-dsh) | Community DeepSeek Harness plugin with novel, short-drama, game and video-recap workbenches |
 | [zenstory](https://github.com/zenstory-ai/zenstory) | Chat-to-create AI novel-writing workbench ([app.zenstory.ai](https://app.zenstory.ai)) |
 
-Moved from worldwonderer/oh-story-claudecode; old links redirect.
+This repository is an independent install source of [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode). Install, Issues and Discussions go here.

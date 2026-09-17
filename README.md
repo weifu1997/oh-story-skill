@@ -19,15 +19,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zenstory-ai/oh-story-claudecode/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/zenstory-ai/oh-story-claudecode?style=flat-square&color=22D3EE&logo=github&logoColor=white&label=Stars"></a>
-  <a href="https://github.com/zenstory-ai/oh-story-claudecode/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/zenstory-ai/oh-story-claudecode?style=flat-square&color=081431&label=Release"></a>
+  <a href="https://github.com/weifu1997/oh-story-skill/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/weifu1997/oh-story-skill?style=flat-square&color=22D3EE&logo=github&logoColor=white&label=Stars"></a>
+  <a href="https://github.com/weifu1997/oh-story-skill/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/weifu1997/oh-story-skill?style=flat-square&color=081431&label=Release"></a>
   <img alt="Skills 13" src="https://img.shields.io/badge/Skills-13-081431?style=flat-square">
   <a href="./LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/License-MIT-1F6FEB?style=flat-square"></a>
 </p>
 
 <p align="center">
   <a href="https://t.me/ohstoryclaudecode"><img alt="Telegram 交流群" src="https://img.shields.io/badge/Telegram%20%E4%BA%A4%E6%B5%81%E7%BE%A4-26A5E4?style=for-the-badge&logo=telegram&logoColor=white"></a>
-  <a href="https://github.com/zenstory-ai/oh-story-claudecode/discussions"><img alt="GitHub Discussions" src="https://img.shields.io/badge/GitHub%20Discussions-181717?style=for-the-badge&logo=github&logoColor=white"></a>
+  <a href="https://github.com/weifu1997/oh-story-skill/discussions"><img alt="GitHub Discussions" src="https://img.shields.io/badge/GitHub%20Discussions-181717?style=for-the-badge&logo=github&logoColor=white"></a>
 </p>
 
 ![OH STORY 本地写作工作台](demo/story-dashboard.png)
@@ -50,12 +50,12 @@ oh-story-claudecode 覆盖长篇与短篇网络小说的全流程：扫榜选材
 
 围绕四条线展开：爆款逆向 · 剧情模块化重组 · 上下文状态分层管理 · 人机协同。
 
-> 最新版本 **v0.7.10**（2026-09-09）。完整变更见 [CHANGELOG.md](CHANGELOG.md) 与 [Releases](https://github.com/zenstory-ai/oh-story-claudecode/releases)；升级后请重跑 `/story-setup` 并新开会话。Antigravity 部署方式见下文「使用说明」。
+> 最新版本 **v0.7.10**（2026-09-09）。完整变更见 [CHANGELOG.md](CHANGELOG.md) 与 [Releases](https://github.com/weifu1997/oh-story-skill/releases)；升级后请重跑 `/story-setup` 并新开会话。Antigravity 部署方式见下文「使用说明」。
 
 ## 安装
 
 ```bash
-npx skills add zenstory-ai/oh-story-claudecode -y -g
+npx skills add weifu1997/oh-story-skill -y -g
 ```
 
 `-g` 全局安装，所有目录可用；去掉 `-g` 则只装到当前目录。更新时重新执行同一条命令即可。
@@ -63,7 +63,7 @@ npx skills add zenstory-ai/oh-story-claudecode -y -g
 也可以直接告诉 Claude Code / Antigravity / OpenCode / ZCode / OpenClaw / Codex / Reasonix，或其他支持导入 GitHub 仓库/skill 的 Web AI / Agent 平台：
 
 ```
-安装这个 skill https://github.com/zenstory-ai/oh-story-claudecode
+安装这个 skill https://github.com/weifu1997/oh-story-skill
 ```
 
 升级时再说一次同一句话即可。
@@ -87,7 +87,7 @@ Windows 上偶尔会看到 `ENOENT ... mkdir` 报错但末尾仍显示 `Done!`�
 **Claude Code 用户：** marketplace 名保持 `oh-story-skills`，其中现在只有一个 `oh-story` bundle，由 Claude Code 从仓库根自动发现全部 13 个 Skills：
 
 ```bash
-claude plugin marketplace add https://github.com/zenstory-ai/oh-story-claudecode
+claude plugin marketplace add https://github.com/weifu1997/oh-story-skill
 claude plugin install oh-story@oh-story-skills
 ```
 
@@ -113,7 +113,7 @@ claude plugin install oh-story@oh-story-skills
 
 </details>
 
-升级后如果项目里已经跑过 `/story-setup`，建议在项目根重跑一次 `/story-setup`，同步 hooks / agents / references。每版变更见 [CHANGELOG.md](CHANGELOG.md) 与 [Releases](https://github.com/zenstory-ai/oh-story-claudecode/releases)。
+升级后如果项目里已经跑过 `/story-setup`，建议在项目根重跑一次 `/story-setup`，同步 hooks / agents / references。每版变更见 [CHANGELOG.md](CHANGELOG.md) 与 [Releases](https://github.com/weifu1997/oh-story-skill/releases)。
 
 **多 agent 协作要先部署再新开会话：** 7 个专业 agent（story-architect、narrative-writer、consistency-checker 等）由 `/story-setup` 写入项目 `.claude/agents/`，由 `$story-setup` 写入 `.codex/agents/*.toml`，或由 Antigravity `story-setup` 生成 `.agents/agents/agent-name/agent.md`（`agent-name` 替换为实际名称）。Antigravity 使用 `invoke_subagent` + 同名 `TypeName`；运行时未暴露 custom subagent 时按 skill 明确降级 solo/direct。判断是否生效：新会话里跑 `/story-review`，报告头是 `Effective Mode: full/lean` 即注册成功，是 `Fallback: ... -> solo` 说明当前运行时未暴露该 agent。
 
@@ -518,8 +518,8 @@ oh-story-claudecode 内置适配 Claude Code、Google Antigravity、OpenCode、Z
 ## 交流
 
 - **Telegram 群**：<https://t.me/ohstoryclaudecode> —— 日常交流、踩坑、新功能讨论。
-- **GitHub Discussions**：[提问 / 求助 / 分享用法](https://github.com/zenstory-ai/oh-story-claudecode/discussions)，方便检索。
-- **GitHub Issues**：[Bug、输出质量 Case、功能请求](https://github.com/zenstory-ai/oh-story-claudecode/issues/new/choose)，请按结构化表单提供复现材料或具体输出证据。
+- **GitHub Discussions**：[提问 / 求助 / 分享用法](https://github.com/weifu1997/oh-story-skill/discussions)，方便检索。
+- **GitHub Issues**：[Bug、输出质量 Case、功能请求](https://github.com/weifu1997/oh-story-skill/issues/new/choose)，请按结构化表单提供复现材料或具体输出证据。
 
 ## 致谢
 
@@ -533,11 +533,12 @@ Oh Story 是 [ZenStory AI](https://zenstory.ai/zh) 的一部分——一组开�
 
 | 项目 | 用途 |
 | --- | --- |
-| [oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode) | 网文写作 skill 包（本仓库） |
+| [oh-story-skill](https://github.com/weifu1997/oh-story-skill) | 网文写作 skill 包（本仓库，独立安装源） |
+| [oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode) | 上游官方仓库 |
 | [drama-skills](https://github.com/zenstory-ai/drama-skills) | AI 短剧 / 漫剧创作 skill 合集：剧本、资产、分镜、图片/视频提示词、独立审查 |
 | [novel-to-game](https://github.com/zenstory-ai/novel-to-game) | 面向原著改编、指定运行环境构建与运行证据 QA 的 agent skills |
 | [video-recap-skills](https://github.com/zenstory-ai/video-recap-skills) | 将支持的视频文件制作成中文解说，可选导出可编辑的剪映/CapCut 草稿 |
 | [oh-story-dsh](https://github.com/zenstory-ai/oh-story-dsh) | DeepSeek Harness 社区插件，提供小说、短剧、游戏和视频解说工作台 |
 | [zenstory](https://github.com/zenstory-ai/zenstory) | 对话即创作的 AI 小说写作工作台（[app.zenstory.ai](https://app.zenstory.ai)） |
 
-本仓库从 worldwonderer/oh-story-claudecode 迁入，旧链接自动跳转。
+本仓库是 [zenstory-ai/oh-story-claudecode](https://github.com/zenstory-ai/oh-story-claudecode) 的独立安装源。安装、Issue 与 Discussions 走本仓库。
