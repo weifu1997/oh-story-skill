@@ -40,7 +40,8 @@
       "source": "skills/story-long-write/scripts/tracking_commit.py",
       "targets": [
         "skills/story-import/scripts/tracking_commit.py",
-        "skills/story-review/scripts/tracking_commit.py"
+        "skills/story-review/scripts/tracking_commit.py",
+        "skills/story-setup/scripts/tracking_commit.py"
       ]
     },
     {
@@ -48,7 +49,8 @@
       "source": "skills/story-long-write/scripts/wordcount_core.py",
       "targets": [
         "skills/story-import/scripts/wordcount_core.py",
-        "skills/story-review/scripts/wordcount_core.py"
+        "skills/story-review/scripts/wordcount_core.py",
+        "skills/story-setup/scripts/wordcount_core.py"
       ]
     },
     {

@@ -43,7 +43,7 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 1. **推荐顺序**：先 `/story-setup`（部署 hooks/agents/AGENTS），新开/刷新会话后运行 `/story-import`，最后用 `/story-long-write 日更/写第N章` 续写。
 2. **也可以直接 `/story-import`**：本 skill 会在进入深度分析前检测 `.story-deployed` 与专业 agent；未部署时会给出"先去 setup"或"继续导入（串行降级）"两种选择。
-3. **已导入过的当前协议项目**（书名目录下有 `追踪/_tracking-state.json`）：不要重复跑完整导入；直接进入书名目录，确认 `.active-book` 指向正确书目，再用 `/story-long-write 日更` 或 `/story-long-write 写第N章`。
+3. **已导入过的当前协议项目**（书名目录下有 `追踪/_tracking-state.json` 或已选定的 `追踪/story-state.sqlite3`）：不要重复跑完整导入；确认 `.active-book` 后用 `/story-long-write` 续写。二者不得并存。
 4. **v0.7.2 及更早的旧追踪项目**（有 `追踪/` 和正文，但没有 `追踪/_tracking-state.json`）：日更会停下要求重新导入，但**不需要重跑全书拆解**。只重建追踪即可，见下方「旧追踪项目迁移」。
 
 这段结论必须出现在任何导入源追问之前，避免用户只想确认流程却被直接要求贴原文。
@@ -92,7 +92,7 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
    - 题材类型：{用户提供}
    - 目标平台：{起点/番茄/晋江/其他}
    - 是否完本：{是/否（半成品写到第N章）}
-   - **篇幅类型**：长篇 / 短篇 —— 按 [references/length-routing.md](references/length-routing.md) 自动检测（用户显式声明 > 结构信号 > 字数兜底），并向用户复述检测结果请其确认。判定结果决定 Phase 3 走长篇还是短篇路径。
+   - **篇幅类型**：长篇 / 短篇 —— 字数阈值见 [references/length-routing.md](references/length-routing.md)，结构分流见 [references/import-structure.md](references/import-structure.md)（用户显式声明 > 结构信号 > 字数兜底），并向用户复述检测结果请其确认。判定结果决定 Phase 3 走长篇还是短篇路径。
    - **最后一章是否完整**：完整章 / 残稿（写了一半）。若是残稿，提示用户并把「残稿到第 N 章」记入上下文，让用户决定是「基于残章续写」还是「先补完再导入」。story-import 只记录用户决定，不替用户选。
 3. **外部对标（可选、与导入源分离）**：用户已经明确指定外部对标时，记录 `{对标书名}` 并确认 `拆文库/{对标书名}/` 是该参考作品的独立拆解产物；不得把 `{导入书名}` 或本次刚生成的拆文目录当候选。用户未指定时不追加提问，记为“未绑定”，后续交给写作 skill 的对标发现流程。
 4. **输出确认**：向用户展示检测到的章节范围、字数、判定的篇幅类型、最后一章状态，以及“外部对标：{对标书名/未绑定}”，确认后开始分析。
@@ -101,13 +101,13 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 在进入 Phase 2 之前，先检测项目是否已部署 story-setup 基础设施：
 
-- 先读取 `.story-deployed` 并执行顶部 Spawn 版本门禁；旧版 `chapter-extractor` 文件即使仍在磁盘上也不可复用。
-- 只有 `agents_version: 28` 通过后，才在当前运行时的 canonical 目录检查 Phase 2 `chapter-extractor`：Claude/OpenCode/Antigravity 为同名 Markdown，Codex 为同名 TOML。
+- 先读取 `.story-deployed` 并执行顶部 Spawn 版本门禁：版本不符只报 `Notice`，**不阻断**并行检查。
+- 然后按文件存在性检查当前运行时 canonical 目录里的 Phase 2 `chapter-extractor`：Claude/OpenCode/Antigravity 为同名 Markdown，Codex 为同名 TOML。文件在即可尝试 spawn；真正降级 solo/direct 的信号仍是 agent 文件缺失或运行时不暴露 custom agent。
 - 如果 `.story-deployed` 的 `target_cli` 包含 `zcode`，项目 agents 缺失是 ZCode 3.3.4 的预期状态：不要提示重复部署，直接以串行 solo/direct 进入分析并报告 fallback。
 
-**部署标记缺失、版本无效/过期，或当前端的 agent 不可用，且不是已部署 ZCode 项目时**，提示用户：
+**部署标记缺失，或当前端的 agent 不可用，且不是已部署 ZCode 项目时**，提示用户：
 
-> 「检测到当前项目尚未部署写作基础设施。建议先运行 `/story-setup` 再回来导入，否则深度分析阶段无法使用并行 chapter-extractor agent。」
+> 「检测到当前项目尚未部署写作基础设施，或当前端找不到 chapter-extractor。建议先运行 `/story-setup` 再回来导入，否则深度分析阶段无法使用并行 chapter-extractor agent。」
 
 给用户两个选择：
 
@@ -208,38 +208,16 @@ story-short-analyze 的拆解管道（Stage 2-6）本身**无 Stage 1 停靠点*
 └── _meta.json           # 管道元数据 + 结构计数（下游 story-short-write 必读）
 ```
 
-### 长篇完整管道（Stage 0-6）
+### 管道执行（不在本 skill 维护 Stage 表）
 
-> 管道详细说明见 story-long-analyze（运行 `/story-long-analyze`），此处仅列概要。
+导入只负责驱动对应 analyze skill 跑完全量管道，并验收其交付物。Stage 名称、输入输出、完成标志、分块策略和质量阈值都以被调用 skill 的 `SKILL.md` 为准，本文件不另维护一份管道说明书。
 
-| 阶段 | 名称 | 输入 | 输出 | 完成标志 |
-|------|------|------|------|----------|
-| 0 | 概要提取 | 原始文本 | 概要.md + 章节索引 | 章节结构识别完成 |
-| 1 | 黄金三章 | 前 3 章原文 | 第1章_深度拆解.md / 第2章_深度拆解.md / 第3章_深度拆解.md → **停靠产出快速预览.md**（导入场景自动续跑，不停下询问） | 3 章拆解完成 |
-| 2 | 逐章摘要 | 分块章节文本 | 章节摘要.md（含情节点+角色+**关键信息与扩写技法**）。每章10-40情节点（密度150-200字/个，按字数动态调节）。角色过滤（龙套不提取、别名归类）。**并行 chapter-extractor agent 模式**（未部署 agent 时降级串行）。**计数验证：摘要数 == 章节数**。 | 所有章节处理完成 |
-| 3 | 聚合分析 | 全部章节摘要 | `剧情/*.md` + `剧情/README.md` + `剧情/故事线.md` + **`剧情/节奏.md` + `剧情/情绪模块.md`**。**故事框架识别**（前置）。**两步法剧情聚合**（先从摘要识别剧情大纲，再按大纲分配情节点）。**关键信息推进索引**、**情绪触动点与爆发节奏**、**读者需求 / 情绪引擎 / 可复现模块**。**角色合并**（跨章节去重+别名归一）。**角色分级**（主角/反派/核心配角/功能角色）。**散落情节兜底**（6步，含覆盖率验证）。**质量检查**（置信度>=0.85/覆盖率85%-95%/重叠率<=35%）。 | 质量检查通过 |
-| 4 | 设定+关系 | 阶段 3 合并后角色数据+情节点 | 设定/*.md + 角色/*.md。**两阶段角色模型**。**别名解析**（置信度≥0.85自动合并）。 | 设定和关系提取完成 |
-| 5 | 汇总报告 | 全部输出 | 拆文报告.md（含「读者需求 / 情绪引擎」「关键信息与扩写技法总览」「节奏与情绪触动点」「可复现模块」，并指向 `剧情/节奏.md` / `剧情/情绪模块.md`） | 报告生成完成 |
-| 6 | 文风 | 拆文报告.md + 章节/第1-3章_深度拆解.md + 章节/*_摘要.md + 原文/原文.txt | 文风.md（本书历史写法分析） | 文风落盘 `拆文库/{导入书名}/文风.md`，保留为导入分析，不复制到本书 `对标/` |
+| 篇幅 | 运行 | 导入必须拿到的交付物 |
+|------|------|---------------------|
+| 长篇 | `/story-long-analyze`，声明「完整拆解、一次跑完、不要停下询问」 | `_progress.md` 为 `schema_version: 2`；`剧情/节奏.md`、`剧情/情绪模块.md`、`拆文报告.md`、`文风.md`、`原文/` 均非空。缺任一先修复或重跑对应 Stage |
+| 短篇 | `/story-short-analyze`，按上方「短篇：单一全量管道」取值 | `_meta.json.stages_completed` 含 6；`拆文报告.md`、`情节节点.md`、`写作手法.md`、`原文/` 均非空 |
 
-### 短篇拆文管道
-
-> 管道详细说明见 story-short-analyze（运行 `/story-short-analyze`），此处仅列概要。
-
-短篇为单一全量管道（Stage 2-6 严格串行），产物落盘 `拆文库/{导入书名}/`：Stage 2 结构+情节节点 → Stage 3 情感线+爆点 → Stage 4 反转+写作手法 → Stage 5 人物+开头结尾 → Stage 6 综合评估，最终汇总为 `拆文报告.md`、`情节节点.md`、`写作手法.md`，另有 `_meta.json` 记管道元数据与结构计数。
-
-长篇分块沿用 story-long-analyze：Stage 2 用 chapter-extractor agent 并行，其余阶段按该 skill「分块策略」的章数阈值执行，story-import 不另定一套。
-
-### 恢复机制
-
-- 中断时通过进度文件追踪进度
-- 新会话读取进度文件定位断点
-- 从断点所在块的起始章节恢复
-- 长篇进度文件格式沿用 story-long-analyze 拆解管道的进度段落约定，包含当前阶段、最后处理章节、已完成阶段列表、更新时间
-
-### 质量检查
-
-长篇阶段 3-4 完成前执行质量检查（置信度 >= 0.85，覆盖率 85%-95%，重叠率 <= 35%），由 story-long-analyze 拆解管道自带的质量检查负责。短篇质量检查见 story-short-analyze 各阶段的完成标志。
+恢复、失败重试和阶段内质量检查由被调用的 analyze skill 执行。story-import 只在进入 Phase 3 前核对上表交付物。
 
 ---
 
@@ -334,10 +312,10 @@ story-short-analyze 的拆解管道（Stage 2-6）本身**无 Stage 1 停靠点*
 
 **细纲**：从章节摘要反推生成 `大纲/细纲_第XXX章.md`：
 
-每章先通过 story-long-write 的 Wordcount Core 运行 `wordcount measure`，将 JSON 的 `actual` 作为已写章节的历史长度快照。这里记录的是原文在 `visible_chars_v1` 下的实际长度，不是让模型重新决定创作目标。依次探测 `python3`、`python`、`py -3`；找不到 Python 3 或 CLI 时返回 `TOOL_UNAVAILABLE` 并停止导入，不得用模型估算或静默跳过。
+每章先用本 skill 的字数 CLI 运行 `wordcount measure`，将 JSON 的 `actual` 作为已写章节的历史长度快照。这里记录的是原文在 `visible_chars_v1` 下的实际长度，不是让模型重新决定创作目标。依次探测 `python3`、`python`、`py -3`；找不到 Python 3 或 CLI 时返回 `TOOL_UNAVAILABLE` 并停止导入，不得用模型估算、静默跳过，也不得改调其他 skill 目录里的 `storyctl.py`。
 
 ```bash
-{PYTHON} {story-long-write skill 根}/scripts/storyctl.py wordcount measure \
+{PYTHON} {story-import skill 根}/scripts/wordcount_cli.py wordcount measure \
   --file "{原文章节文件}" \
   --chapter {N}
 ```
@@ -347,7 +325,7 @@ story-short-analyze 的拆解管道（Stage 2-6）本身**无 Stage 1 停靠点*
 
 ### 第 N 章：{章名}
 - 核心事件：{从摘要中提取}
-- 字数目标：{storyctl 返回的 actual} 字
+- 字数目标：{wordcount_cli 返回的 actual} 字
 - 字数口径：visible_chars_v1
 - 目标情绪：{从章节基调/情绪曲线提取；未知写 [待补充]}
 - 章首钩子：[待补充]
@@ -389,7 +367,7 @@ story-short-analyze 的拆解管道（Stage 2-6）本身**无 Stage 1 停靠点*
 
 #### Step 7：追踪文件生成
 
-导入项目必须通过本 skill 自带的 `scripts/tracking_commit.py init` 一次性生成追踪状态，禁止模型分别写最终文件。完整字段与命令见 [references/tracking-transaction.md](references/tracking-transaction.md)。语义准备顺序如下：
+导入项目默认通过本 skill 自带的 `scripts/tracking_commit.py init` 一次性生成 JSON 追踪状态，禁止模型分别写最终文件。完整字段与命令见 [references/tracking-transaction.md](references/tracking-transaction.md)。用户要求高连续性、或计划超过 50 万字 / 150 章时，不要 init JSON：把已接受正文交给 `/story-long-write` 按其 SQLite 协议从第 1 章逐章重放，不能把计划倒进库。语义准备顺序如下：
 
 1. **导入截止章**：把最后完整章 N 写入初始化事务的 `last_chapter`。工具在 meta 记录 `imported_through_chapter=N`；导入旧章没有日更事务，不得为第 1..N 章伪造逐章增量，也不额外生成一份重复当前状态的叙事基线。
 2. **核心角色当前快照**：从拆书产物反推主角、反派、核心配角的截至 N 章状态，按角色写入初始化 JSON 的 `character_snapshots`。输出由工具生成到 `追踪/角色状态/{角色名}.md`；算法见 [references/character-state-reverse.md](references/character-state-reverse.md)。
@@ -591,7 +569,7 @@ story-short-analyze 的拆解管道（Stage 2-6）本身**无 Stage 1 停靠点*
 
 | 场景 | 加载文件 |
 |------|---------|
-| 篇幅分流判定 | `references/length-routing.md` |
+| 篇幅分流判定 | `references/length-routing.md`（字数阈值）+ `references/import-structure.md`（章节结构） |
 | 章节格式识别 | 由 story-long-analyze 拆解管道（运行 `/story-long-analyze`）的阶段 1 负责 |
 
 ### Phase 2：深度分析

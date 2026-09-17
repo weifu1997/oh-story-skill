@@ -2,11 +2,13 @@
 
 `追踪/` 使用“一个结构化权威状态 + 多个确定性派生视图”。模型只提交一份语义 JSON，不分别 `Write/Edit/echo >>` 多个追踪文件。
 
+默认事实源是 `_tracking-state.json`。超长篇或用户点名高连续性时改用 SQLite 事实源（long-write 的 sqlite-state-engine 协议）；选定后禁止再写 JSON。同一本书不得双写。该协议只在 long-write skill 中。
+
 ## 权威层与派生层
 
 | 层级 | 文件 | 语义 |
 |---|---|---|
-| 唯一权威 | `_tracking-state.json` | schema、最后提交章、导入截止章、状态修订号、上下文结构、角色/伏笔/时间线，以及已提交章节的简短字数记录 |
+| 唯一权威 | `_tracking-state.json` | schema、最后提交章、导入截止章、状态修订号、上下文结构、角色/伏笔/时间线、待复核章 `needs_review`，以及已提交章节的简短字数记录 |
 | 章节记录 | `逐章记录/第NNN章.md` | 本章对未来连续性有用的紧凑变化；目标 ≤1536 字节，硬上限 3072 字节；导入范围内修订写成覆盖记录 |
 | 派生视图 | `上下文.md`、`角色状态/{角色名}.md`、`伏笔.md`、`时间线/作者真相.md`、`时间线/读者已知.md` | 完全从 `_tracking-state.json` 生成；禁止手改，不作为程序输入 |
 
@@ -15,7 +17,7 @@ Markdown 只负责给作者和 Agent 阅读，工具不再反向解析 Markdown�
 
 ## 运行工具
 
-先按运行环境探测 Python 3 解释器（依次尝试 `python3`、`python`、`py -3`）。追踪事务脚本使用当前 skill 根目录；字数与章节闭环统一使用 `story-long-write` skill 根目录：
+先按运行环境探测 Python 3 解释器（依次尝试 `python3`、`python`、`py -3`）。追踪事务脚本使用当前 skill 根目录。章节闭环只在 long-write 日更/大修时用同目录 `storyctl.py`。导入测已写章节长度走 import skill 自带的字数 CLI，不跨 skill 调 `storyctl.py`。
 
 ```text
 {PYTHON} {当前 skill 根}/scripts/tracking_commit.py init   --project {书项目根} --input {初始化事务.json}
@@ -26,11 +28,12 @@ Markdown 只负责给作者和 Agent 阅读，工具不再反向解析 Markdown�
 ```
 
 - `init`：只在 `_tracking-state.json` 不存在时执行，绝不覆盖已初始化项目。
-- `wordcount measure` / `wordcount checkpoint`：纯测量入口；不写正文、不写 tracking、不做语义判断。长篇正文流程一次写完整章，**不在章中调用测量**，长度由 `chapter check` 一次收口；这两个入口供导入、审查等其他场景使用。
+- `wordcount measure` / `wordcount checkpoint`：纯测量入口；不写正文、不写 tracking、不做语义判断。长篇正文流程一次写完整章，**不在章中调用测量**，长度由 `chapter check` 一次收口。导入测已写章节长度走 import skill 自带的字数 CLI，不跨 skill 调 `storyctl.py`。
 - `chapter check`：重新读取当前正文与细纲目标，返回确定性长度状态、现有 blocking quality、`state_revision` 和当前可执行动作，不保存 approval。`under` 不提供自动补写；`over` 额外返回一次净删型 `compress-once` 及进入内带/用户带所需的机器删除区间。
 - `chapter commit`：再次读取当前文件、重新计数并重跑 blocking quality；只接受用户带内章节，把简短字数记录与逐章事务一起原子提交。
 - `chapter accept-current-length`：只接受带外但 quality pass 的章节；接受动作发生时重新读取、重新计数并立即原子提交，不保存可陈旧的历史决议。
-- `check`：严格验证 state schema、逐章记录连续性/规范名/体积、固定 7 栏、角色快照硬上限、派生文件集合，以及所有派生视图与 state 的逐字一致性。
+- `check`：严格验证 state schema、逐章记录连续性/规范名/体积、固定 7 栏、角色快照硬上限、派生文件集合、`needs_review` 均不超过最后提交章，以及所有派生视图与 state 的逐字一致性。`check` 的 JSON 含 `needs_review`；非空时不得 append 新章。若已有当前卷审计，JSON 另含 `volume_audit`。
+- `audit-volume`：只读计算当前卷审计。`--persist` 才写入 state。JSON 热状态只查到期未推进伏笔、`needs_review` 和时间线揭示章；文风漂移不是硬门槛。字段级人物弧只有 SQLite 引擎才记录。
 
 每本书由 `追踪/.tracking-commit.lock` 串行写事务，`expected_state_revision` 再拒绝基于旧状态构造的 stale transaction。两个不同事务并发时至多一个修订成功。字数记录也在锁内对当前正文和目标重新验证，正文或目标变化会让预先构造的记录直接失败。
 
@@ -55,6 +58,7 @@ Markdown 只负责给作者和 Agent 阅读，工具不再反向解析 Markdown�
   "chapter": 10,
   "chapter_title": "专业团队拍得还不如他拍的好？",
   "expected_state_revision": 9,
+  "continuity_changed": false,
   "delta": {
     "result": "专业团队重拍的高清版在高层看片会上被判定缺了灵魂，张耀祖拍板继续采用江晨的手机原版。",
     "character_changes": [
@@ -90,6 +94,7 @@ Markdown 只负责给作者和 Agent 阅读，工具不再反向解析 Markdown�
     "position": {
       "volume": "第一卷·军宣整顿",
       "volume_start_chapter": 1,
+      "planned_end_chapter": 80,
       "story_time": "实弹训练两天后",
       "scene": "火箭军文工团高层看片会"
     },
@@ -125,6 +130,9 @@ Markdown 只负责给作者和 Agent 阅读，工具不再反向解析 Markdown�
 - `伏笔.md` 只呈现已经埋设过的当前状态。未来规划仍留在大纲。
 - `timeline_events.action` 可为 `upsert/delete`。`未揭示` 的 `reveal_chapter` 必须为 `null`；部分/完全揭示只能填写已经发生的实际章节。
 - `mode=revision` 时，逐章记录必须重算为修订后该章仍然成立的完整连续性记录；当前角色、伏笔、时间线和上下文则提交受影响对象截至最新已写章的当前值。
+- `continuity_changed` 只允许出现在 `mode=revision`。缺省或 `false`：只复核/重建该章，从 `needs_review` 去掉本章，不给下游打标。`true`：事实、角色状态、伏笔、时间线或下一章承诺相对已接受版本发生了变化，工具把第 N+1 章到最后已提交章写入 `needs_review`，并去掉本章。`append` 不得带 `true`。
+- `needs_review` 非空时，`append` 与 `storyctl.py chapter check/commit` 写下一章都会失败；必须按章节顺序对每章提交 `revision`（内容需改则 `continuity_changed=true`，确认仍成立则 `false`）直到列表清零。纯措辞、重建派生视图用 `false`。
+- `context.position.planned_end_chapter` 可选。append 写到该章时，工具自动保存当前卷审计。append 把 `volume` 或 `volume_start_chapter` 换成下一卷时，先审计上一卷；status 为 `block` 则拒绝开新卷。也可在卷完结时单独跑 `audit-volume --persist`。
 - 修订导入截止章内的正文时，会新增或覆盖该章的逐章记录；`imported_through_chapter` 不变。
 
 ## 续写状态卡固定格式

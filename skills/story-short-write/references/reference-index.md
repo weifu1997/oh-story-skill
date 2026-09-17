@@ -11,6 +11,7 @@
 | [references/short-craft.md](short-craft.md) | 写作全程参考（短篇通用底座：情绪直写与场景支撑、在场叙述、超短章节制） |
 | [references/genre-styles/](genre-styles/) | **定方向后必读**：按题材加载对应风格包（追妻火葬场 / 世情打脸 / 复仇打脸 / 总裁豪门 / 宅斗宫斗 / 民俗怪谈 / 悬疑 / 甜宠 / 双男主 / 沙雕脑洞），正文风格随之切换 |
 | [references/short-deslop.md](short-deslop.md) | 去AI味时必读（短篇专属，只杀真·AI腔，不杀情绪烈度） |
+| [references/length-routing.md](length-routing.md) | 短篇默认交付区间与拆文/导入共用阈值；用户未指定范围时先读 |
 | [references/workflow-design.md](workflow-design.md) | Phase 2 构思、设计字段、Agent 调用与完成门禁；Phase 3/4 不预加载 |
 | [references/workflow-draft.md](workflow-draft.md) | Phase 3 写正文前必读：参数与逐场景写作；完成门槛见入口 |
 | [references/workflow-revision.md](workflow-revision.md) | Phase 4 精修/自检前必读：检查分工、去味调用、扫描与交付验收 |

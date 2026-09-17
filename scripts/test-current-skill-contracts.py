@@ -593,6 +593,39 @@ def test_spawn_preflight_uses_agents_version_not_file_existence() -> None:
     )
 
 
+def test_spawn_capable_skill_cannot_pin_a_stale_agents_version() -> None:
+    manifest = repository_manifest()
+    current = manifest.agents_version
+    stale = current - 1
+    current_preflight = """
+读取 `.story-deployed` 的 `agents_version: {current}`；不一致时照常按文件存在性检查并 spawn，
+报告 `Notice: agents bundle 版本不匹配（项目 {{N}}，本版 {current}）` 并提示重跑 `/story-setup`。
+大于 {current} 时额外提示先更新 oh-story-claudecode。
+只有 agent 文件缺失、或运行时不暴露 custom agent 时才降级 solo/direct，报告 `Fallback: ... -> solo`。
+""".format(current=current)
+    leftover = current_preflight + "\n只有 `agents_version: {stale}` 通过后，才检查 chapter-extractor。\n".format(
+        stale=stale
+    )
+    found = VALIDATOR.spawn_preflight_findings(
+        leftover, manifest, Path("story-import-stale-pin.md")
+    )
+    require(
+        "spawn-stale-agents-version-pin" in finding_codes(found),
+        "a leftover agents_version pin must fail even when the shared preflight is present",
+    )
+    require(
+        not VALIDATOR.spawn_preflight_findings(
+            current_preflight, manifest, Path("current-fixture.md")
+        ),
+        "the current shared spawn preflight must not be treated as a stale pin",
+    )
+    require(
+        "spawn-stale-agents-version-pin"
+        not in finding_codes(VALIDATOR.validate_repository(REPO_ROOT, manifest)),
+        "repository spawn-capable Skills must not pin a stale agents_version",
+    )
+
+
 def test_reviewed_benchmark_wording_stays_removed() -> None:
     cases = {
         "benchmark-primary-nonblocking-wording": "缺失按原流程，不阻塞。\n",

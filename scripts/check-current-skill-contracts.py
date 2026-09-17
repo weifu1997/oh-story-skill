@@ -725,17 +725,52 @@ def spawn_preflight_findings(
         ),
     )
     missing = [label for pattern, label in required if re.search(pattern, text) is None]
-    if not missing:
-        return []
-    return [
-        Finding(
-            "spawn-agents-version-preflight",
-            "spawn-capable Skill must use the shared agents_version preflight: {}".format(
-                "; ".join(missing)
-            ),
-            path,
+    findings: List[Finding] = []
+    if missing:
+        findings.append(
+            Finding(
+                "spawn-agents-version-preflight",
+                "spawn-capable Skill must use the shared agents_version preflight: {}".format(
+                    "; ".join(missing)
+                ),
+                path,
+            )
         )
-    ]
+    findings.extend(stale_agents_version_pin_findings(text, current, path))
+    return findings
+
+
+AGENTS_VERSION_PIN_RE = re.compile(r"`agents_version:\s*(\d+)`")
+
+
+def stale_agents_version_pin_findings(
+    text: str, current: str, path: Path
+) -> List[Finding]:
+    """Reject leftover version pins that a later bump left behind.
+
+    The shared preflight already requires the current value.  A second pin such
+    as ``agents_version: 28`` in the same file would still pass that check and
+    then block spawn at runtime.  CHANGELOG / UPGRADING history is out of
+    scope: this only scans spawn-capable Skill bodies.
+    """
+
+    findings: List[Finding] = []
+    for line_number, raw in enumerate(text.splitlines(), start=1):
+        for match in AGENTS_VERSION_PIN_RE.finditer(raw):
+            if match.group(1) == current:
+                continue
+            findings.append(
+                Finding(
+                    "spawn-stale-agents-version-pin",
+                    "spawn-capable Skill pins agents_version {!r}, must be {!r}".format(
+                        match.group(1), current
+                    ),
+                    path,
+                    line_number,
+                    raw.strip(),
+                )
+            )
+    return findings
 
 
 def rubric_dimension_names(repo_root: Path) -> Tuple[List[str], List[str]]:

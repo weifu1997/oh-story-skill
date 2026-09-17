@@ -30,15 +30,17 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 ### Step 2：字数检查（长短篇路由）
 
-拿到原文后立刻数字数：
+拿到原文后立刻数字数，按 [references/length-routing.md](references/length-routing.md)「字数阈值表」分流：
 
 ```
 word_count = 全文字数
-  ├─ < 15,000          → 直接进入 short 管道
-  ├─ 15,000 - 20,000   → 灰区：询问用户「字数 {N}，介于短/长之间，按短篇还是长篇拆？」
-  └─ > 20,000          → 提示「此文字数 {N} 偏长，建议改用 /story-long-analyze。
+  ├─ < 20,000          → 直接进入 short 管道
+  ├─ 20,000 - 30,000   → 灰区：询问用户「字数 {N}，介于短/长之间，按短篇还是长篇拆？」
+  └─ ≥ 30,000          → 提示「此文字数 {N} 偏长，建议改用 /story-long-analyze。
                            仍要按短篇拆请明确回复『按短篇继续』」
 ```
+
+导入流程已锁定篇幅时，不要再问；按锁定结果执行。
 
 ### Step 3：题材识别
 
@@ -226,7 +228,7 @@ Stage 6 内容写完后，**不**立刻 append `6` 到 `stages_completed[]`。�
 |---|---|---|
 | 准备开写 | story-short-write（同时读 拆文报告.md + 情节节点.md + 写作手法.md + 原文/ + _meta.json） | `/story-short-write` |
 | 需要市场数据 | story-short-scan | `/story-short-scan` |
-| 字数 > 20k 更适合长篇 | story-long-scan → story-long-analyze | `/story-long-scan` |
+| 字数 ≥ 30k 且用户确认改走长篇 | story-long-scan → story-long-analyze | `/story-long-scan` |
 
 ---
 
@@ -236,6 +238,7 @@ Stage 6 内容写完后，**不**立刻 append `6` 到 `stages_completed[]`。�
 
 | 文件 | 何时加载 |
 |------|----------|
+| [references/length-routing.md](references/length-routing.md) | Phase 1 Step 2：与 import / write 共用的短篇字数阈值 |
 | [references/output-contract.md](references/output-contract.md) | 全程：Stage→文件映射 / `_meta.json` schema（含 structure_counts）/ 下游消费规范 / 验收接入点 |
 | [references/output-templates.md](references/output-templates.md) | 拆文时：输出模板 + 结构库 + 质量检查（含 [BLOCK]/[WARN] 标注） |
 | [references/material-decomposition.md](references/material-decomposition.md) | 拆文方法论：情节节点提取 + 写作手法 + 情感线 + 节奏分析 + 共鸣分析 + 人物规则 + **质量标准唯一权威** |

@@ -133,6 +133,14 @@
       "targets": ["skills/story-short-analyze/references/output-contract.md"]
     },
     {
+      "name": "short-length-routing",
+      "source": "skills/story-import/references/length-routing.md",
+      "targets": [
+        "skills/story-short-analyze/references/length-routing.md",
+        "skills/story-short-write/references/length-routing.md"
+      ]
+    },
+    {
       "name": "plot-core-methods",
       "source": "skills/story-long-write/references/plot-core-methods.md",
       "targets": [

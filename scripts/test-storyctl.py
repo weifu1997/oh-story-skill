@@ -124,6 +124,29 @@ class OutlineTargetTests(unittest.TestCase):
                 "- 字数口径：visible_chars_v1\n"
             )
 
+    def test_explicit_user_range_overrides_automatic_bands(self) -> None:
+        contract = storyctl.contract_from_outline(
+            "- 字数目标：3000 字\n- 字数范围：2500-3000 字\n- 字数口径：visible_chars_v1\n"
+        )
+        self.assertEqual(contract["target"], 3000)
+        self.assertEqual(contract["internal"], {"min": 2500, "max": 3000})
+        self.assertEqual(contract["user"], {"min": 2500, "max": 3000})
+        self.assertTrue(contract["explicit_range"])
+        result = storyctl.evaluate_wordcount(
+            "字" * 2600,
+            3000,
+            bands={"internal": contract["internal"], "user": contract["user"]},
+        )
+        self.assertEqual(result["status"], "internal_pass")
+        automatic = storyctl.evaluate_wordcount("字" * 2400, 3000)
+        self.assertEqual(automatic["status"], "under")
+        explicit_under = storyctl.evaluate_wordcount(
+            "字" * 2400,
+            3000,
+            bands={"internal": contract["internal"], "user": contract["user"]},
+        )
+        self.assertEqual(explicit_under["status"], "under")
+
 
 class CheckpointTests(unittest.TestCase):
     def test_checkpoint_reports_only_current_count_and_remaining_user_range(self) -> None:
@@ -202,6 +225,24 @@ class StoryctlCliTests(unittest.TestCase):
         self.assertEqual(result["schema"], "story-chapter-check/v1")
         self.assertEqual(result["length"]["target"], 1000)
         self.assertEqual(result["length"]["status"], "internal_pass")
+
+    def test_chapter_check_uses_sqlite_engine_when_database_exists(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="storyctl-sqlite-") as directory:
+            project = Path(directory)
+            (project / "大纲").mkdir()
+            (project / "正文").mkdir()
+            (project / "追踪" / "逐章记录").mkdir(parents=True)
+            (project / "大纲/细纲_第001章.md").write_text(
+                "- 字数目标：20 字\n- 字数口径：visible_chars_v1\n", encoding="utf-8"
+            )
+            (project / "正文/第001章_测试.md").write_text("# 第一章\n林舟站在旧宅门前。\n", encoding="utf-8")
+            state = storyctl._sqlite_module()
+            state.initialize(project, "SQLite 测试书")
+            completed, result = run_cli("chapter", "check", "--project", str(project), "--chapter", "1")
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(result["needs_review"], [])
+        self.assertFalse(result["tracking_committed"])
+        self.assertEqual(result["state_revision"], 0)
 
     def test_wordcount_measure_returns_actual_without_a_target(self) -> None:
         with tempfile.TemporaryDirectory(prefix="storyctl-measure-") as directory:
@@ -292,6 +333,47 @@ class StoryctlCliTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, f"{outline.name}: {completed.stderr}")
             self.assertEqual(result["status"], "internal_pass", outline.name)
             self.assertEqual(result["target"], result["actual"], outline.name)
+
+
+class ImportWordcountCliTests(unittest.TestCase):
+    CLI = ROOT / "skills/story-import/scripts/wordcount_cli.py"
+
+    def _run(self, *arguments: str) -> tuple[subprocess.CompletedProcess[str], dict[str, object]]:
+        completed = subprocess.run(
+            [sys.executable, str(self.CLI), *arguments],
+            cwd=ROOT,
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            check=False,
+        )
+        try:
+            payload = json.loads(completed.stdout)
+        except json.JSONDecodeError as error:
+            raise AssertionError(
+                f"CLI did not return JSON: exit={completed.returncode} stdout={completed.stdout!r} stderr={completed.stderr!r}"
+            ) from error
+        return completed, payload
+
+    def test_measure_matches_storyctl_without_leaving_the_import_skill(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="import-measure-") as directory:
+            body = Path(directory) / "chapter.md"
+            body.write_text("# 第一章\n正文 😀", encoding="utf-8")
+            completed, result = self._run(
+                "wordcount", "measure", "--file", str(body), "--chapter", "1"
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(result["schema"], "story-wordcount-measurement/v1")
+        self.assertEqual(result["metric"], "visible_chars_v1")
+        self.assertEqual(result["actual"], 3)
+        self.assertEqual(result["status"], "measured")
+
+    def test_missing_file_is_invalid_not_an_exception(self) -> None:
+        completed, result = self._run("wordcount", "measure", "--file", "missing.md")
+        self.assertEqual(completed.returncode, 2)
+        self.assertEqual(result["status"], "invalid")
+        self.assertEqual(result["invalid_reason"], "INVALID_FILE")
 
 
 if __name__ == "__main__":

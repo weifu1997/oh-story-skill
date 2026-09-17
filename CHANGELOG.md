@@ -12,6 +12,22 @@ compare 链接；小节名使用 Keep a Changelog 的六个英文类别（`Added
 
 ## [Unreleased]
 
+### Fixed
+
+- `story-import` 并行拆文不再要求 `agents_version: 28`：版本不符只提示，文件存在即可 spawn。
+- 导入测字数改走本 skill 的 `wordcount_cli.py`；`story-setup check` 改走本 skill 的 `tracking_commit.py`，不再跨 skill 调 long-write 脚本。
+- 短篇 analyze / import / write 共用 `length-routing.md` 字数阈值；`/story` 项目发现与切书识别短篇单文件工程。
+
+### Added
+
+- 长篇开书与短篇构思增加换皮测试和「为什么只有这个人会这样选」闸门：未通过不得进入大纲或正文。短篇 Phase 2 契约脚本检查这两项。
+- 审稿与独立去味增加接受闸门：未点名的 S3/S4 和建议项默认不改；表达修改须带对照表，且只动目标句附近。写后 blocking 清零仍按写作流程执行。
+- 追踪事务增加 `needs_review` 与 revision 的 `continuity_changed`：改旧章若动了连续性，下游待复核清零前不能 append / 日更。
+- 细纲可写 `字数范围：A-B`，用户明确上下限时按原样闭区间验收。扫榜假设保持简介层，不得直接写成章法或当前趋势。
+- 审稿协议补齐 RV-ID 证据链：observation / inference / impact / minimum_fix / invariants / confidence / status；用户点名 ID 才 accepted；缺 lint/字数或大纲契约附件不算审完。
+- JSON 热状态增加卷完结审计：到期未推进伏笔、`needs_review`、时间线揭示章；开新卷前有 blocker 则拒绝。文风漂移不是硬门槛。
+- 可选 SQLite 事实源：计划超过 50 万字、超过 150 章或用户点名高连续性时启用；与 JSON 互斥。变更单带字段路径和 `references`，改旧章按读写依赖打 `needs_review`。已有 JSON 项目必须从 accepted corpus 逐章重放，不能把计划倒进库。
+
 ## [0.7.10] - 2026-09-09
 
 > 本版 `agents_version: 30`（v0.7.9 为 29），`setup_skill_version: 1.2.10`。更新技能包后，在写作项目根重新运行 `/story-setup`（Codex 用 `$story-setup`），再新开会话，加载新版写手、检查规则和参考文件。此前使用 main v30 的项目也需重新部署。

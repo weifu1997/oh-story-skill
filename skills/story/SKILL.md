@@ -18,7 +18,8 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 | 长篇拆文 | 拆文、分析这本书、黄金三章 | `/story-long-analyze` |
 | 短篇拆文 | 拆短篇、分析这个故事 | `/story-short-analyze` |
 | 长篇扫榜 | 长篇排行、什么火、起点/番茄/晋江 | `/story-long-scan` |
-| 选题决策 | 写什么能爆、帮我选题、选题方向 | `/story-long-scan` |
+| 长篇选题决策 | 写长篇什么能爆、长篇选题方向 | `/story-long-scan` |
+| 短篇选题决策 | 写短篇什么能爆、短篇选题、盐言选题 | `/story-short-scan` |
 | 短篇扫榜 | 短篇排行、知乎盐言排行 | `/story-short-scan` |
 | 去 AI 味 | 去 AI 味、太 AI、去味 | `/story-deslop` |
 | 审查稿件 | 审查、审稿、帮我审一下、一致性检查、看看有没有问题 | `/story-review` |
@@ -95,7 +96,9 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 路由前先检查当前项目状态：
 
-- **无项目目录**（没有包含 `追踪/` 或 `设定/` 的书名目录）：
+- **无项目目录**（没有长篇或短篇工程）：
+  - 长篇：目录内含 `正文/`、`大纲/`、`设定/` 或 `追踪/` 任一普通子目录
+  - 短篇：目录内含普通文件 `正文.md`，并同时含 `小节大纲.md` 或 `设定.md`（与 Dashboard 相同；符号链接不作为项目标记）
   - 如果用户要写作，下一步是先运行 `/story-setup` 初始化环境（Codex 中用 `$story-setup`）
   - 如果用户要扫榜/拆文，直接路由
 - **已有项目**：检查 `.story-deployed` 标记，如未部署则先运行 `/story-setup`（Codex 中用 `$story-setup`）
@@ -104,7 +107,10 @@ metadata: {"openclaw":{"source":"https://github.com/zenstory-ai/oh-story-claudec
 
 用户想切换或查看在写的书时（一个项目可同时有多本）：
 
-1. 在项目根查找所有书目录：包含 `追踪/` 或 `设定/` 子目录的目录（含 `长篇/`、`短篇/` 下的子目录）。
+1. 在项目根查找所有书目录（含 `长篇/`、`短篇/` 下的子目录），判定与 Dashboard 相同：
+   - 长篇：目录内含 `正文/`、`大纲/`、`设定/` 或 `追踪/` 任一普通子目录
+   - 短篇：目录内含普通文件 `正文.md`，并同时含 `小节大纲.md` 或 `设定.md`
+   符号链接不作为项目标记。
 2. 列出书名，并标出当前 `.active-book` 指向的那本。
 3. 让用户选择，把所选书的相对路径写入项目根 `.active-book`（覆盖原内容）。
 4. 只发现一本时直接确认为活跃书，无需询问。
